@@ -1,0 +1,58 @@
+@import "tailwindcss";
+@import "@xyflow/react/dist/style.css";
+
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono-face), ui-monospace, monospace;
+
+  --color-bg: #011627;
+  --color-canvas: #04192c;
+  --color-panel: #0a2238;
+  --color-raised: #10304d;
+  --color-line: #1b3d5c;
+  --color-fg: #e6edf7;
+  --color-muted: #8aa1bd;
+  --color-accent: #00a3ff;
+  --color-ok: #2fbf71;
+  --color-warn: #f2b33d;
+  --color-danger: #f0555a;
+
+  --color-port-any: #8aa1bd;
+  --color-port-text: #2dd4bf;
+  --color-port-json: #a78bfa;
+  --color-port-file: #f2b33d;
+  --color-port-image: #f472b6;
+}
+
+html,
+body {
+  height: 100%;
+  background: var(--color-bg);
+  color: var(--color-fg);
+}
+
+/* React Flow theming */
+.react-flow {
+  --xy-background-color: var(--color-canvas);
+  --xy-background-pattern-dots-color-default: #1f4466;
+  --xy-edge-stroke-default: #4f7aa3;
+  --xy-edge-stroke-selected-default: var(--color-accent);
+  --xy-connectionline-stroke-default: var(--color-accent);
+  --xy-minimap-background-color-default: var(--color-panel);
+  --xy-minimap-mask-background-color-default: rgb(1 22 39 / 0.6);
+  --xy-controls-button-background-color-default: var(--color-panel);
+  --xy-controls-button-background-color-hover-default: var(--color-raised);
+  --xy-controls-button-color-default: var(--color-fg);
+  --xy-controls-button-border-color-default: var(--color-line);
+  --xy-resize-background-color-default: var(--color-accent);
+  --xy-selection-background-color-default: rgb(0 163 255 / 0.08);
+  --xy-selection-border-default: 1px dashed var(--color-accent);
+}
+
+.react-flow__node.selectable:focus-visible {
+  outline: none;
+}
+
+.react-flow__edge-path {
+  stroke-width: 1.75;
+}
