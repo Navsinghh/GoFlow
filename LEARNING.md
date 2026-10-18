@@ -80,7 +80,7 @@ Also worth a look, in one function: the `remove` mutation in `apps/web/app/(app)
 - **Production hardening** (the v1 release):
   - env validation that refuses localhost defaults in production (`apps/web/lib/env.ts`)
   - a health endpoint plus a wake-up ping for sleeping free hosts (`WakeCollab.tsx`)
-  - transaction-pooler detection (`packages/db/src/connect.ts`)
+  - a pooled database connection for the website and a direct one for migrations and the collab server, with idle connections closed before Vercel suspends a function (`packages/db/src/connect.ts`, `apps/web/lib/db.ts`)
   - security headers (`next.config.ts`)
   - loading Yjs once on the server (`serverExternalPackages`), because two copies break its constructor checks
 
@@ -98,13 +98,13 @@ For each layer: what we used, what else you could use, and when the alternative 
 | Real-time sync | **Yjs + self-hosted Hocuspocus** | Liveblocks, Automerge, PartyKit / Cloudflare Durable Objects, Replicache / Zero, Supabase Realtime, ElectricSQL | **Liveblocks:** you don't want to run a server. **Automerge:** you want JSON-like documents and a Rust core. **Supabase Realtime:** simple broadcasts where last-write-wins is fine (it isn't a CRDT). **Zero / Replicache:** you want server-authoritative sync over relational data. |
 | API | **tRPC** | REST + OpenAPI (e.g. Hono + zod-openapi), GraphQL, Next.js server actions | **REST/OpenAPI:** non-TypeScript clients (mobile, partners) need your API. **GraphQL:** many clients with very different data needs. **Server actions:** small forms with no reusable API. |
 | Auth | **Better Auth** | Auth.js, Clerk, WorkOS, Supabase Auth, roll your own | **Clerk / WorkOS:** you want hosted UI, SSO and SAML without building them. **Roll your own:** only to learn. Never for production. |
-| Database / ORM | **Postgres + Drizzle** | Prisma, Kysely, raw SQL (`postgres.js`); MongoDB; SQLite / Turso | **Prisma:** you prefer a schema DSL and a generated client. **Kysely:** you want a pure query builder. **SQLite / Turso:** edge-hosted, read-heavy apps. **MongoDB:** truly schemaless data (not this app, which is relational). |
+| Database / ORM | **Postgres (Neon) + Drizzle**, on node-postgres (`pg`) | Prisma, Kysely, raw SQL (`postgres.js`), the Neon serverless driver; MongoDB; SQLite / Turso | **Prisma:** you prefer a schema DSL and a generated client. **Kysely:** you want a pure query builder. **Neon serverless driver:** edge runtimes, or one-off queries over HTTP without a pool. **SQLite / Turso:** edge-hosted, read-heavy apps. **MongoDB:** truly schemaless data (not this app, which is relational). |
 | Validation | **Zod 4** | Valibot, ArkType, TypeBox | **Valibot:** bundle size matters a lot (it's tree-shakable). **TypeBox:** you need JSON Schema output. |
 | Styling | **Tailwind CSS 4** | CSS Modules, vanilla-extract, Panda CSS, shadcn/ui on top of Tailwind | **CSS Modules:** a team that prefers plain CSS. **shadcn/ui:** you want ready-made accessible components (planned for later phases). |
 | Animation | **Web Animations API** (built in) | Motion (Framer Motion), GSAP | **Motion:** layout animations and React-driven gestures. **GSAP:** complex timelines and scroll-driven storytelling. |
 | Testing | **Vitest** with real Postgres and WebSockets | Jest, Testcontainers, Playwright (end-to-end) | **Testcontainers:** you want each test run to start its own throwaway database. **Playwright:** testing the full browser flow (planned). |
 | Email | **Resend** (console fallback in dev) | Postmark, Amazon SES, Nodemailer + SMTP | **SES:** high volume and low cost. **Postmark:** the best deliverability for transactional email. |
-| Hosting (planned) | **Vercel (web) + Fly.io or Railway (collab) + Neon (Postgres)** | One VPS with Docker Compose, Cloudflare (Workers + Durable Objects), AWS (ECS / RDS) | **VPS:** cheapest, with full control. **Cloudflare:** run everything at the edge, with Durable Objects as the room server. |
+| Hosting | **Vercel (web) + Neon (Postgres) + a long-running host for collab** ([docs/deploy.md](docs/deploy.md)) | One VPS with Docker Compose, Cloudflare (Workers + Durable Objects), AWS (ECS / RDS) | **VPS:** cheapest, with full control. **Cloudflare:** run everything at the edge, with Durable Objects as the room server. |
 
 ### Choices made along the way (worth discussing in interviews)
 - **Hocuspocus instead of Liveblocks.** More code to own, but it works offline, needs no vendor account, and shows backend skills. Trade-off: WebSockets can't run on Vercel, so the collab server needs its own host.

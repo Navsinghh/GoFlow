@@ -1,17 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { connect } from "./connect";
+import { parse } from "pg-connection-string";
+import { poolConfig } from "./connect";
 
-describe("connect", () => {
-  it("turns off prepared statements for transaction poolers", () => {
-    const pooled = connect("postgres://u:p@ep-cool-123-pooler.eu-central-1.aws.neon.tech/app?sslmode=require");
-    const direct = connect("postgres://u:p@ep-cool-123.eu-central-1.aws.neon.tech/app?sslmode=require");
-    expect(pooled.options.prepare).toBe(false);
-    expect(direct.options.prepare).toBe(true);
+const neon = "postgresql://u:p@ep-cool-123-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+
+describe("poolConfig", () => {
+  it("translates Neon's libpq settings for node-postgres", () => {
+    const config = poolConfig(neon);
+    expect(config.enableChannelBinding).toBe(true);
+    const parsed = parse(config.connectionString!);
+    expect(parsed).toMatchObject({ host: "ep-cool-123-pooler.c-2.us-east-1.aws.neon.tech", database: "neondb", sslmode: "verify-full" });
+    expect(parsed).not.toHaveProperty("channel_binding");
   });
 
-  it("supports Unix-socket connection strings", () => {
-    const sql = connect("postgres://nav@localhost/flowcraft?host=/var/run/postgresql");
-    expect(sql.options.path).toBe("/var/run/postgresql/.s.PGSQL.5432");
-    expect(sql.options.database).toBe("flowcraft");
+  it("keeps Unix-socket connection strings working", () => {
+    const parsed = parse(poolConfig("postgres://nav@localhost/flowcraft?host=/var/run/postgresql").connectionString!);
+    expect(parsed).toMatchObject({ host: "/var/run/postgresql", database: "flowcraft", user: "nav" });
   });
 });

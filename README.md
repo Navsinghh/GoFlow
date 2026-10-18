@@ -27,7 +27,7 @@
 
 ## Tech stack
 
-Next.js 16 · React 19 · TypeScript (strict) · React Flow (`@xyflow/react` 12) · Yjs · Hocuspocus (self-hosted Yjs sync) · tRPC 11 + TanStack Query · Better Auth · Postgres + Drizzle · Tailwind CSS 4 · Zod 4 · Vitest · Turborepo + pnpm
+Next.js 16 · React 19 · TypeScript (strict) · React Flow (`@xyflow/react` 12) · Yjs · Hocuspocus (self-hosted Yjs sync) · tRPC 11 + TanStack Query · Better Auth · Postgres (Neon) + Drizzle · Tailwind CSS 4 · Zod 4 · Vitest · Turborepo + pnpm
 
 ```
 apps/web                  Next.js app: landing, sign-in, dashboard, editor, sharing, tRPC + auth API

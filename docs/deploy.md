@@ -31,18 +31,28 @@ Keep them somewhere safe (a password manager):
 ---
 
 ## 1. Database: Neon
-1. Create a free account at [neon.com](https://neon.com) and a new project. Pick a region close to where your collaboration server and Vercel will run (e.g. US East or Frankfurt).
-2. On the project dashboard, open **Connect**. You'll see two connection strings:
-   - **Direct** (host like `ep-xxx.region.aws.neon.tech`): use this for migrations and the collaboration server.
-   - **Pooled** (host like `ep-xxx-pooler.region.aws.neon.tech`): best for the website on Vercel. Flowcraft detects `-pooler` hosts and adjusts automatically.
-3. Create the tables from your computer, using the **direct** string:
+Neon gives you two connection strings for the same database:
+- **Pooled** (the host name contains `-pooler`): many short visits share a few real connections. The **website** uses it, because every Vercel function opens its own.
+- **Direct**: one real connection each. **Migrations** and the **collaboration server** use it, because they run long transactions and lock rows while saving.
+
+This repository is already linked to a Neon project (`neon.ts`, plus the gitignored `.neon` file). From the repository root:
 
 ```bash
-cd ~/Desktop/flowcraft
-DATABASE_URL="postgresql://…direct…/neondb?sslmode=require" pnpm db:migrate
+npm i -g neon@latest   # once
+neon login             # once; opens the browser
+neon env pull          # writes DATABASE_URL (pooled) and DATABASE_URL_UNPOOLED (direct) to .env.local
+pnpm db:migrate:neon   # creates or updates the tables, over the direct connection
 ```
 
-Run this again whenever a new release includes database changes (new files in `packages/db/migrations`).
+Without the CLI, copy both strings from the project's **Connect** dialog in the Neon console (the **Connection pooling** switch picks between them), then run the migrations with the direct one:
+
+```bash
+DATABASE_URL="postgresql://…direct…/neondb?sslmode=require&channel_binding=require" pnpm db:migrate
+```
+
+Run the migrations again whenever a new release includes database changes (new files in `packages/db/migrations`).
+
+The app talks to Postgres through node-postgres (`pg`). It works through Neon's pooler as-is and verifies the database's TLS certificate. On Vercel it also closes idle connections before a function is suspended (`attachDatabasePool` in `apps/web/lib/db.ts`).
 
 ## 2. Collaboration server: choose a host
 ### What it needs
@@ -50,7 +60,7 @@ Run this again whenever a new release includes database changes (new files in `p
 - **WebSocket support** (`wss://`).
 - About 256–512 MB of RAM; very little CPU.
 - Environment variables:
-  - `DATABASE_URL`: the Neon **direct** string
+  - `DATABASE_URL_UNPOOLED`: the Neon **direct** string (naming it `DATABASE_URL` works too)
   - `COLLAB_SECRET`: the COLLAB secret
   - `PORT`: usually set by the host automatically
 - Health check path: **`/health`**, which returns `{"ok":true}`.
@@ -65,6 +75,8 @@ Run this again whenever a new release includes database changes (new files in `p
 | **Railway** | Trial, then ~$5/month | Yes | No | Simple, not free long-term |
 | **Fly.io** | No free tier | Yes | No | Good, paid |
 | **Small VPS** (Hetzner, DigitalOcean, Oracle Always Free) | ~$4–6/month (Oracle free) | Yes | No | Always fast; you maintain the server |
+
+**Keep an eye on: Vercel WebSockets.** Vercel Functions now accept WebSocket connections (public beta, `@vercel/functions` 3.10 and later). That could one day put the collaboration server on Vercel too, but not as it stands: each function instance holds its own connections, so rooms would need syncing across instances (for example through Redis), and connections have a maximum duration. Flowcraft doesn't support this yet.
 
 ### Questions to answer while researching
 1. WebSockets supported?
@@ -102,7 +114,7 @@ After it's live, open `https://<your-collab-host>/health` and confirm you see `{
 
 | Name | Value |
 |---|---|
-| `DATABASE_URL` | Neon **pooled** connection string |
+| `DATABASE_URL` | Neon **pooled** connection string (the `DATABASE_URL` line that `neon env pull` writes) |
 | `BETTER_AUTH_SECRET` | the AUTH secret |
 | `BETTER_AUTH_URL` | your site URL, e.g. `https://flowcraft-xyz.vercel.app` (no trailing slash) |
 | `COLLAB_SECRET` | the COLLAB secret (same as on the collaboration server) |
@@ -157,5 +169,6 @@ The sign-in page shows a button for each provider that has both values set.
 | GitHub/Google error "redirect_uri mismatch" | The callback URL doesn't exactly match `https://<your-site>/api/auth/callback/<provider>` |
 | Sign-in page says it isn't set up | No OAuth variables set (or no redeploy after adding them) |
 | Vercel build fails installing packages | Add `ENABLE_EXPERIMENTAL_COREPACK=1` |
+| `pnpm db:migrate:neon` says "DATABASE_URL is not set" | The repository root has no `.env.local` yet: run `neon env pull` |
 | Build fails with "COLLAB_INTERNAL_URL" or "NEXT_PUBLIC_COLLAB_URL" required | Production builds require both; set them in Vercel |
 | Chat or activity doesn't update live for web-side actions (renames, shares) | `COLLAB_INTERNAL_URL` is wrong or blocked |

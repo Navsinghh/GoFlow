@@ -11,17 +11,20 @@
     "typecheck": "tsc",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/migrate.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:migrate:neon": "node --env-file=../../.env.local --import tsx src/migrate.ts"
   },
   "dependencies": {
     "drizzle-orm": "0.45.4",
     "nanoid": "6.0.2",
-    "postgres": "3.4.9",
+    "pg": "8.23.1",
     "yjs": "13.6.33"
   },
   "devDependencies": {
     "@types/node": "24.19.2",
+    "@types/pg": "8.23.1",
     "drizzle-kit": "0.31.11",
+    "pg-connection-string": "2.14.1",
     "tsx": "4.23.15",
     "typescript": "5.9.3",
     "vitest": "5.0.5"

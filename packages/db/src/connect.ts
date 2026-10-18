@@ -1,21 +1,21 @@
-import postgres from "postgres";
+import pg from "pg";
 
 /**
- * Creates a postgres.js client. Handles two connection-string details
- * postgres.js doesn't on its own:
- * - the libpq-style `?host=/var/run/postgresql` parameter for Unix sockets
- * - poolers in transaction mode (e.g. Neon's `-pooler` hosts), which don't
- *   support prepared statements, so those are turned off for them
+ * Turns a libpq-style connection string (as Neon and local Postgres hand out)
+ * into node-postgres settings:
+ * - `sslmode=require` is made explicit as `verify-full`, which is what pg
+ *   already does for it (it warns when it has to assume)
+ * - `channel_binding=require` maps to pg's SCRAM-SHA-256-PLUS support
+ * Unix-socket strings (`?host=/var/run/postgresql`) work as they are.
  */
-export function connect(url: string, options: postgres.Options<{}> = {}) {
+export function poolConfig(url: string): pg.PoolConfig {
   const parsed = new URL(url);
-  const pooled = parsed.hostname.includes("-pooler");
-  const merged: postgres.Options<{}> = pooled ? { prepare: false, ...options } : options;
+  if (parsed.searchParams.get("sslmode") === "require") parsed.searchParams.set("sslmode", "verify-full");
+  const channelBinding = parsed.searchParams.get("channel_binding");
+  parsed.searchParams.delete("channel_binding");
+  return { connectionString: parsed.toString(), enableChannelBinding: channelBinding === "require" };
+}
 
-  const socketDir = parsed.searchParams.get("host");
-  if (socketDir?.startsWith("/")) {
-    parsed.searchParams.delete("host");
-    return postgres(parsed.toString(), { ...merged, host: socketDir });
-  }
-  return postgres(url, merged);
+export function createPool(url: string, config: pg.PoolConfig = {}) {
+  return new pg.Pool({ ...poolConfig(url), ...config });
 }

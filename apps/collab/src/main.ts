@@ -8,7 +8,9 @@ function required(name: string) {
 }
 
 const server = createCollabServer({
-  db: createDb(required("DATABASE_URL")),
+  // A long-running server holding row locks should use a direct connection, not
+  // a transaction pooler. Neon provides it as DATABASE_URL_UNPOOLED.
+  db: createDb(process.env.DATABASE_URL_UNPOOLED ?? required("DATABASE_URL")),
   secret: required("COLLAB_SECRET"),
   port: Number(process.env.PORT ?? 1234),
 });
