@@ -22,6 +22,14 @@
   --color-port-json: #a78bfa;
   --color-port-file: #f2b33d;
   --color-port-image: #f472b6;
+
+  --animate-panel-in: panel-in 160ms ease-out;
+  @keyframes panel-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
 }
 
 html,
@@ -29,6 +37,61 @@ body {
   height: 100%;
   background: var(--color-bg);
   color: var(--color-fg);
+}
+
+/*
+ * Scrollbars: slim, nearly invisible until you hover the area, and with
+ * their space reserved up front so content never shifts sideways when a
+ * list grows long enough to scroll.
+ */
+.overflow-auto,
+.overflow-y-auto,
+.overflow-y-scroll {
+  scrollbar-gutter: stable;
+}
+
+/*
+ * Pages that scroll as a whole opt in, so the editor gets no empty gutter.
+ * Chrome doesn't honour scrollbar-gutter on the page itself with custom
+ * scrollbars, so the bar is always present instead; its transparent track
+ * makes that invisible.
+ */
+html:has([data-page-scroll]) {
+  overflow-y: scroll;
+}
+
+/* Chrome, Edge, Safari: the WebKit pseudo-elements allow a properly small bar. */
+@supports selector(::-webkit-scrollbar) {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: transparent;
+  }
+  :hover::-webkit-scrollbar-thumb {
+    background: var(--color-line);
+  }
+  ::-webkit-scrollbar-thumb:hover,
+  ::-webkit-scrollbar-thumb:active {
+    background: var(--color-muted);
+  }
+}
+
+/* Firefox: the standard properties (setting these in Chrome would disable the rules above). */
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+  *:hover {
+    scrollbar-color: var(--color-line) transparent;
+  }
 }
 
 /* React Flow theming */

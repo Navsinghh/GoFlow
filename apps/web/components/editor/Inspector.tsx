@@ -1,10 +1,12 @@
 "use client";
 
 import { useMemo } from "react";
-import { CircleAlert, CircleCheck, Trash2 } from "lucide-react";
-import { validate } from "@flowcraft/flow-engine";
+import { CircleAlert, Trash2 } from "lucide-react";
+import { validate, type Issue } from "@flowcraft/flow-engine";
 import { describeFields, getDefinition, portsOf, readConfig, resolvePorts, type FieldSpec } from "@flowcraft/node-registry";
 import { useFlowState } from "@/lib/flow-context";
+import { nodeDisplayName } from "@/lib/node-name";
+import { useFocusNodes } from "@/lib/use-focus-nodes";
 import { nodeIcon } from "@/lib/icons";
 
 const inputClass =
@@ -97,76 +99,89 @@ function Field({ field, value, onChange }: { field: FieldSpec; value: unknown; o
   );
 }
 
-function FlowSummary() {
+/** Whether the flow contains workflow nodes, and what's stopping it from running. */
+export function useRunCheck() {
   const { nodes, edges } = useFlowState();
-  const result = useMemo(
-    () => validate({ nodes: nodes.map((n) => ({ ...n, type: n.type ?? "" })), edges }, resolvePorts),
-    [nodes, edges],
-  );
-  const stats = [
-    ["Nodes", result.numNodes],
-    ["Edges", result.numEdges],
-    ["DAG", result.isDag ? "yes" : "no"],
-  ] as const;
+  return useMemo(() => {
+    const hasWorkflow = nodes.some((n) => getDefinition(n.type ?? "")?.mode === "workflow");
+    const { errors } = validate({ nodes: nodes.map((n) => ({ ...n, type: n.type ?? "" })), edges }, resolvePorts);
+    return { hasWorkflow, issues: hasWorkflow ? errors : [] };
+  }, [nodes, edges]);
+}
+
+/**
+ * What the inspector has to show right now: the selected node, the problems
+ * blocking a workflow, or nothing (in which case it stays out of the way).
+ */
+export function useInspectorTarget(): "node" | "issues" | null {
+  const { nodes } = useFlowState();
+  const { issues } = useRunCheck();
+  const selected = nodes.filter((n) => n.selected);
+  if (selected.length === 1 && getDefinition(selected[0]!.type ?? "")) return "node";
+  if (selected.length === 0 && issues.length > 0) return "issues";
+  return null;
+}
+
+/** Problems that would stop the workflow from running; each one jumps to its node. */
+function IssuesPanel({ issues }: { issues: Issue[] }) {
+  const { nodes, edges } = useFlowState();
+  const focus = useFocusNodes();
+
+  const nodeName = (id: string) => nodeDisplayName(nodes.find((n) => n.id === id));
+
+  // Issues about a connection point at the nodes on either end of it.
+  const targetsOf = (issue: Issue) => {
+    if (issue.nodeId) return [issue.nodeId];
+    const edge = edges.find((e) => e.id === issue.edgeId);
+    return edge ? [edge.source, edge.target] : [];
+  };
 
   return (
-    <div className="space-y-5 p-4">
-      <div>
-        <h2 className="text-sm font-medium">Flow</h2>
-        <p className="mt-1 text-xs text-muted">Select a node to edit it.</p>
-      </div>
-      <dl className="grid grid-cols-3 gap-2">
-        {stats.map(([label, value]) => (
-          <div key={label} className="rounded-lg border border-line bg-bg p-2.5">
-            <dt className="text-[11px] text-muted">{label}</dt>
-            <dd className="mt-0.5 font-mono text-lg">{value}</dd>
-          </div>
-        ))}
-      </dl>
-      <section>
-        <h3 className="mb-2 text-xs font-medium text-muted">Validation</h3>
-        {result.errors.length === 0 ? (
-          <p className="flex items-center gap-2 text-sm text-ok">
-            <CircleCheck className="size-4" /> Ready to run
-          </p>
-        ) : (
-          <ul className="space-y-1.5">
-            {result.errors.map((issue, i) => (
-              <li key={i} className="flex gap-2 rounded-md bg-danger/10 px-2.5 py-2 text-xs text-fg">
-                <CircleAlert className="mt-px size-3.5 shrink-0 text-danger" />
-                <span>
-                  {issue.message}
-                  {issue.nodeId && <span className="ml-1 font-mono text-muted">#{issue.nodeId.slice(0, 4)}</span>}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-    </div>
+    <section aria-labelledby="run-check" className="p-4">
+      <h2 id="run-check" className="flex items-center gap-2 text-sm font-medium">
+        <CircleAlert className="size-4 text-danger" />
+        {issues.length === 1 ? "1 thing to fix before running" : `${issues.length} things to fix before running`}
+      </h2>
+      <ul className="mt-3 space-y-1.5">
+        {issues.map((issue, i) => {
+          const targets = targetsOf(issue);
+          const name = issue.nodeId ? nodeName(issue.nodeId) : null;
+          return (
+            <li key={i}>
+              <button
+                type="button"
+                disabled={targets.length === 0}
+                onClick={() => focus(targets)}
+                title={targets.length > 0 ? "Show on canvas" : undefined}
+                className="w-full rounded-md bg-danger/10 px-2.5 py-2 text-left text-xs text-fg transition enabled:hover:bg-danger/20"
+              >
+                {name && <span className="font-medium">{name}: </span>}
+                {issue.message}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 
-export function Inspector() {
-  const { nodes, updateNodeData, removeNodes } = useFlowState();
+/** Settings for the selected node, or the problems blocking a workflow. Renders nothing otherwise. */
+export function InspectorContent() {
+  const { nodes, updateNodeData, removeNodes, readOnly } = useFlowState();
+  const { issues } = useRunCheck();
   const selected = nodes.filter((n) => n.selected);
   const node = selected.length === 1 ? selected[0] : undefined;
   const definition = node?.type ? getDefinition(node.type) : undefined;
 
-  if (!node || !definition) {
-    return (
-      <aside className="w-72 shrink-0 overflow-y-auto border-l border-line bg-panel">
-        <FlowSummary />
-      </aside>
-    );
-  }
+  if (!node || !definition) return selected.length === 0 && issues.length > 0 ? <IssuesPanel issues={issues} /> : null;
 
   const config = readConfig(definition, node.data);
   const ports = portsOf(definition.type, node.data);
   const Icon = nodeIcon(definition.icon);
 
   return (
-    <aside className="w-72 shrink-0 overflow-y-auto border-l border-line bg-panel">
+    <div>
       <div className="flex items-start gap-3 border-b border-line p-4">
         <span className="grid size-9 place-items-center rounded-md bg-bg text-accent">
           <Icon className="size-4" />
@@ -175,16 +190,18 @@ export function Inspector() {
           <h2 className="text-sm font-medium">{definition.label}</h2>
           <p className="text-xs text-muted">{definition.description}</p>
         </div>
-        <button
-          type="button"
-          onClick={() => removeNodes([node.id])}
-          aria-label="Delete node"
-          className="rounded-md p-1.5 text-muted transition hover:bg-danger/15 hover:text-danger"
-        >
-          <Trash2 className="size-4" />
-        </button>
+        {!readOnly && (
+          <button
+            type="button"
+            onClick={() => removeNodes([node.id])}
+            aria-label="Delete node"
+            className="rounded-md p-1.5 text-muted transition hover:bg-danger/15 hover:text-danger"
+          >
+            <Trash2 className="size-4" />
+          </button>
+        )}
       </div>
-      <div className="space-y-4 p-4">
+      <fieldset disabled={readOnly} className="space-y-4 p-4 disabled:opacity-70">
         {describeFields(definition.configSchema).map((field) => (
           <Field
             key={field.key}
@@ -193,7 +210,7 @@ export function Inspector() {
             onChange={(value) => updateNodeData(node.id, { [field.key]: value })}
           />
         ))}
-      </div>
+      </fieldset>
       {ports && (
         <div className="border-t border-line p-4">
           <h3 className="mb-2 text-xs font-medium text-muted">Ports</h3>
@@ -211,6 +228,25 @@ export function Inspector() {
           </ul>
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * Inspector for editors without a sidebar (playground, public links): a card
+ * floating over the canvas that only appears when there's something in it.
+ */
+export function FloatingInspector() {
+  const target = useInspectorTarget();
+  if (!target) return null;
+  return (
+    <aside
+      data-tour="inspector"
+      aria-label="Inspector"
+      // Leaves room for the minimap in the bottom-right corner.
+      className="absolute top-3 right-3 z-10 max-h-[calc(100%-190px)] w-80 overflow-y-auto rounded-xl border border-line bg-panel/95 shadow-2xl shadow-black/40 backdrop-blur motion-safe:animate-panel-in"
+    >
+      <InspectorContent />
     </aside>
   );
 }

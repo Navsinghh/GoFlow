@@ -3,7 +3,7 @@
 import { createContext, useContext, useMemo } from "react";
 import type { FlowApi } from "./flow-doc";
 
-type FlowActions = Pick<FlowApi, "flow" | "addNode" | "updateNodeData" | "removeNodes" | "undo" | "redo">;
+type FlowActions = Pick<FlowApi, "flow" | "readOnly" | "addNode" | "updateNodeData" | "removeNodes" | "undo" | "redo">;
 
 // Actions are stable across renders; node components read only these so a
 // drag elsewhere on the canvas doesn't re-render them.
@@ -11,10 +11,10 @@ const ActionsContext = createContext<FlowActions | null>(null);
 const StateContext = createContext<FlowApi | null>(null);
 
 export function FlowProvider({ api, children }: { api: FlowApi; children: React.ReactNode }) {
-  const { flow, addNode, updateNodeData, removeNodes, undo, redo } = api;
+  const { flow, readOnly, addNode, updateNodeData, removeNodes, undo, redo } = api;
   const actions = useMemo(
-    () => ({ flow, addNode, updateNodeData, removeNodes, undo, redo }),
-    [flow, addNode, updateNodeData, removeNodes, undo, redo],
+    () => ({ flow, readOnly, addNode, updateNodeData, removeNodes, undo, redo }),
+    [flow, readOnly, addNode, updateNodeData, removeNodes, undo, redo],
   );
   return (
     <ActionsContext.Provider value={actions}>

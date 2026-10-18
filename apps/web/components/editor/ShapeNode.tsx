@@ -5,6 +5,7 @@ import { Handle, NodeResizer, Position, type NodeProps } from "@xyflow/react";
 import { getDefinition, readConfig } from "@flowcraft/node-registry";
 import { useFlowActions } from "@/lib/flow-context";
 import { cn } from "@/lib/cn";
+import { PeerSelection } from "@/components/presence/PeerSelection";
 
 const sides = [Position.Top, Position.Right, Position.Bottom, Position.Left];
 
@@ -12,7 +13,7 @@ export const ShapeNode = memo(function ShapeNode({ id, type, data, selected }: N
   const definition = getDefinition(type)!;
   const config = readConfig(definition, data) as { label: string; fill: string; stroke: string; textColor: string };
   const shape = definition.shape!;
-  const { updateNodeData } = useFlowActions();
+  const { updateNodeData, readOnly } = useFlowActions();
   const [editing, setEditing] = useState(false);
 
   const isDiamond = shape === "diamond";
@@ -20,9 +21,10 @@ export const ShapeNode = memo(function ShapeNode({ id, type, data, selected }: N
   const boxStyle = isDiamond ? undefined : { background: config.fill, borderColor: config.stroke };
 
   return (
-    <div className="group relative size-full" onDoubleClick={() => setEditing(true)}>
+    <div className="group relative size-full" onDoubleClick={() => !readOnly && setEditing(true)}>
+      <PeerSelection nodeId={id} rounded={shape === "ellipse" || shape === "rounded" ? "rounded-[999px]" : "rounded-lg"} />
       <NodeResizer
-        isVisible={selected}
+        isVisible={selected && !readOnly}
         minWidth={40}
         minHeight={32}
         lineClassName="!border-accent"
@@ -70,7 +72,7 @@ export const ShapeNode = memo(function ShapeNode({ id, type, data, selected }: N
             style={{ color: config.textColor }}
             className="line-clamp-6 whitespace-pre-wrap break-words"
           >
-            {config.label || (selected ? "Double-click to edit" : "")}
+            {config.label || (selected && !readOnly ? "Double-click to edit" : "")}
           </span>
         )}
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { IndexeddbPersistence } from "y-indexeddb";
 import { createFlowDoc, replaceGraph, type FlowDoc } from "@/lib/flow-doc";
 import { seedGraph } from "@/lib/seed";
@@ -28,5 +29,20 @@ export function Playground() {
   }, []);
 
   if (!flow) return <div className="grid h-dvh place-items-center text-sm text-muted">Loading flow…</div>;
-  return <Editor flow={flow} title="Playground" />;
+  return (
+    <Editor
+      flow={flow}
+      title={<h1 className="text-sm font-medium">Playground</h1>}
+      fileName="playground"
+      homeHref="/"
+      actions={
+        <Link
+          href="/sign-in"
+          className="mr-2 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-bg transition hover:brightness-110"
+        >
+          Sign up to save flows
+        </Link>
+      }
+    />
+  );
 }

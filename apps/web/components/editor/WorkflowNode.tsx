@@ -8,6 +8,7 @@ import { describeFields, getDefinition, readConfig, type FieldSpec } from "@flow
 import { useFlowActions } from "@/lib/flow-context";
 import { nodeIcon } from "@/lib/icons";
 import { cn } from "@/lib/cn";
+import { PeerSelection } from "@/components/presence/PeerSelection";
 
 const portColor: Record<DataType, string> = {
   any: "var(--color-port-any)",
@@ -34,9 +35,10 @@ function PortRow({ port, side }: { port: Port; side: "in" | "out" }) {
 }
 
 function InlineField({ nodeId, field, value }: { nodeId: string; field: FieldSpec; value: unknown }) {
-  const { updateNodeData } = useFlowActions();
+  const { updateNodeData, readOnly } = useFlowActions();
   const common = {
     value: String(value ?? ""),
+    readOnly,
     placeholder: field.placeholder,
     "aria-label": field.label,
     onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -56,7 +58,7 @@ export const WorkflowNode = memo(function WorkflowNode({ id, type, data, selecte
   const config = readConfig(definition, data);
   const ports = definition.ports!(config);
   const inlineFields = describeFields(definition.configSchema).filter((f) => f.inline);
-  const { removeNodes } = useFlowActions();
+  const { removeNodes, readOnly } = useFlowActions();
   const Icon = nodeIcon(definition.icon);
 
   // Variable ports come and go as the user types; React Flow must re-measure them.
@@ -67,22 +69,24 @@ export const WorkflowNode = memo(function WorkflowNode({ id, type, data, selecte
   return (
     <div
       className={cn(
-        "group w-[280px] rounded-xl border bg-panel/95 shadow-xl shadow-black/30 backdrop-blur transition-colors",
+        "group relative w-[280px] rounded-xl border bg-panel/95 shadow-xl shadow-black/30 backdrop-blur transition-colors",
         selected ? "border-accent ring-2 ring-accent/25" : "border-line",
       )}
     >
+      <PeerSelection nodeId={id} />
       <div className="flex items-center gap-2 rounded-t-xl border-b border-line bg-raised/60 px-3 py-2">
         <Icon className="size-4 text-accent" />
         <span className="text-sm font-medium">{definition.label}</span>
-        <span className="ml-auto font-mono text-[10px] text-muted">{id.slice(0, 4)}</span>
-        <button
-          type="button"
-          onClick={() => removeNodes([id])}
-          aria-label={`Delete ${definition.label} node`}
-          className="nodrag rounded p-0.5 text-muted opacity-0 transition hover:bg-danger/20 hover:text-danger group-hover:opacity-100 focus-visible:opacity-100"
-        >
-          <X className="size-3.5" />
-        </button>
+        {!readOnly && (
+          <button
+            type="button"
+            onClick={() => removeNodes([id])}
+            aria-label={`Delete ${definition.label} node`}
+            className="nodrag ml-auto rounded p-0.5 text-muted opacity-0 transition hover:bg-danger/20 hover:text-danger group-hover:opacity-100 focus-visible:opacity-100"
+          >
+            <X className="size-3.5" />
+          </button>
+        )}
       </div>
 
       {inlineFields.length > 0 && (

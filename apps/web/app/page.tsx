@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Shapes, Sparkles, Users, Workflow } from "lucide-react";
+import { getSession } from "@/lib/auth";
 
 const features = [
   { icon: Shapes, title: "Diagram mode", body: "Shapes, sticky notes and connectors for flow maps of any kind." },
@@ -8,9 +9,10 @@ const features = [
   { icon: Sparkles, title: "AI native", body: "LLM nodes powered by Claude, with generate-a-flow from a prompt." },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const session = await getSession();
   return (
-    <main className="mx-auto flex min-h-full max-w-5xl flex-col px-4 py-16 sm:px-6 sm:py-24">
+    <main data-page-scroll className="mx-auto flex min-h-full max-w-5xl flex-col px-4 py-16 sm:px-6 sm:py-24">
       <p className="font-mono text-sm text-accent">flowcraft</p>
       <h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight sm:text-6xl">
         Map it out. Then make it run.
@@ -21,10 +23,16 @@ export default function Home() {
       </p>
       <div className="mt-10 flex flex-wrap gap-3">
         <Link
-          href="/playground"
+          href={session ? "/dashboard" : "/sign-in"}
           className="rounded-lg bg-accent px-5 py-3 font-medium text-bg transition hover:brightness-110"
         >
-          Open the playground
+          {session ? "Go to your flows" : "Get started free"}
+        </Link>
+        <Link
+          href="/playground"
+          className="rounded-lg border border-line bg-panel px-5 py-3 font-medium transition hover:bg-raised"
+        >
+          Try the playground
         </Link>
       </div>
       <div className="mt-20 grid gap-4 sm:grid-cols-2">

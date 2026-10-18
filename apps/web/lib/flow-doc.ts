@@ -31,6 +31,8 @@ export interface FlowDoc {
 
 /** Transaction origin for this user's edits; only these are undoable. */
 export const LOCAL_ORIGIN = "local";
+/** Origin for state that came from the server; it is neither undoable nor saved back. */
+export const REMOTE_ORIGIN = "remote";
 
 export function createFlowDoc(doc = new Y.Doc()): FlowDoc {
   const nodes = doc.getMap<FlowNode>("nodes");
@@ -88,7 +90,7 @@ function projectEdges(stored: Iterable<FlowEdge>, prev: Edge[]): Edge[] {
   });
 }
 
-export function useFlow(flow: FlowDoc) {
+export function useFlow(flow: FlowDoc, { readOnly = false }: { readOnly?: boolean } = {}) {
   const [nodes, setNodes] = useState<Node[]>(() => projectNodes(flow.nodes.values(), []));
   const [edges, setEdges] = useState<Edge[]>(() => projectEdges(flow.edges.values(), []));
   const [history, setHistory] = useState({ canUndo: false, canRedo: false });
@@ -115,7 +117,13 @@ export function useFlow(flow: FlowDoc) {
     };
   }, [flow]);
 
-  const transact = useCallback((fn: () => void) => flow.doc.transact(fn, LOCAL_ORIGIN), [flow]);
+  // Viewers can still select and pan, but nothing they do reaches the document.
+  const transact = useCallback(
+    (fn: () => void) => {
+      if (!readOnly) flow.doc.transact(fn, LOCAL_ORIGIN);
+    },
+    [flow, readOnly],
+  );
 
   const patchNode = useCallback(
     (id: string, patch: Partial<FlowNode>) => {
@@ -206,12 +214,13 @@ export function useFlow(flow: FlowDoc) {
     [flow, patchNode, transact],
   );
 
-  const undo = useCallback(() => flow.undoManager.undo(), [flow]);
-  const redo = useCallback(() => flow.undoManager.redo(), [flow]);
+  const undo = useCallback(() => void (readOnly || flow.undoManager.undo()), [flow, readOnly]);
+  const redo = useCallback(() => void (readOnly || flow.undoManager.redo()), [flow, readOnly]);
 
   return useMemo(
     () => ({
       flow,
+      readOnly,
       nodes,
       edges,
       ...history,
@@ -224,7 +233,7 @@ export function useFlow(flow: FlowDoc) {
       undo,
       redo,
     }),
-    [flow, nodes, edges, history, onNodesChange, onEdgesChange, addEdge, addNode, updateNodeData, removeNodes, undo, redo],
+    [flow, readOnly, nodes, edges, history, onNodesChange, onEdgesChange, addEdge, addNode, updateNodeData, removeNodes, undo, redo],
   );
 }
 

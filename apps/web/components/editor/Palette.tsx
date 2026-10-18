@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useReactFlow } from "@xyflow/react";
 import { Search, Shapes, Workflow } from "lucide-react";
-import { definitionsFor, type NodeDefinition, type NodeMode } from "@flowcraft/node-registry";
+import { definitionsFor, getDefinition, type NodeDefinition, type NodeMode } from "@flowcraft/node-registry";
 import { useFlowActions } from "@/lib/flow-context";
 import { nodeIcon } from "@/lib/icons";
 import { cn } from "@/lib/cn";
@@ -11,8 +11,8 @@ import { cn } from "@/lib/cn";
 export const DRAG_MIME = "application/flowcraft-node";
 
 const tabs: { mode: NodeMode; label: string; icon: typeof Workflow }[] = [
-  { mode: "workflow", label: "Workflow", icon: Workflow },
   { mode: "diagram", label: "Diagram", icon: Shapes },
+  { mode: "workflow", label: "Workflow", icon: Workflow },
 ];
 
 function groupByCategory(definitions: NodeDefinition[]) {
@@ -21,31 +21,44 @@ function groupByCategory(definitions: NodeDefinition[]) {
   return [...groups];
 }
 
-export function Palette() {
-  const [mode, setMode] = useState<NodeMode>("workflow");
+export function Palette({ initialMode }: { initialMode: NodeMode }) {
+  const [mode, setMode] = useState<NodeMode>(initialMode);
   const [query, setQuery] = useState("");
   const { addNode } = useFlowActions();
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, getNodes } = useReactFlow();
 
   const q = query.trim().toLowerCase();
   const visible = definitionsFor(mode).filter(
     (d) => !q || d.label.toLowerCase().includes(q) || d.description.toLowerCase().includes(q),
   );
 
-  // Click (or Enter) adds the node to the middle of the visible canvas.
+  // Click (or Enter) adds the node to the middle of the visible canvas,
+  // cascading down-right so repeated clicks don't stack nodes exactly.
   const addToCenter = (type: string) => {
     const canvas = document.querySelector(".react-flow")?.getBoundingClientRect();
     if (!canvas) return;
-    addNode(type, screenToFlowPosition({ x: canvas.left + canvas.width / 2, y: canvas.top + canvas.height / 2 }));
+    const center = screenToFlowPosition({ x: canvas.left + canvas.width / 2, y: canvas.top + canvas.height / 2 });
+    // addNode centres sized shapes on the point, so compare top-left corners.
+    const size = getDefinition(type)?.defaultSize ?? { width: 0, height: 0 };
+    const taken = getNodes().map((n) => n.position);
+    let { x, y } = center;
+    const near = (p: { x: number; y: number }) =>
+      Math.abs(p.x - (x - size.width / 2)) < 30 && Math.abs(p.y - (y - size.height / 2)) < 30;
+    while (taken.some(near)) {
+      x += 40;
+      y += 40;
+    }
+    addNode(type, { x, y });
   };
 
   return (
-    <aside className="flex w-64 shrink-0 flex-col border-r border-line bg-panel">
+    <aside data-tour="palette" className="flex w-64 shrink-0 flex-col border-r border-line bg-panel">
       <div className="grid grid-cols-2 gap-1 p-2" role="tablist" aria-label="Node library">
         {tabs.map(({ mode: m, label, icon: Icon }) => (
           <button
             key={m}
             role="tab"
+            data-tour={`tab-${m}`}
             aria-selected={mode === m}
             onClick={() => setMode(m)}
             className={cn(
@@ -77,6 +90,8 @@ export function Palette() {
                 return (
                   <button
                     key={d.type}
+                    data-tour={`node-${d.type}`}
+                    data-label={d.label}
                     draggable
                     onDragStart={(e) => {
                       e.dataTransfer.setData(DRAG_MIME, d.type);

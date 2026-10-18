@@ -1,0 +1,30 @@
+{
+  "name": "@flowcraft/collab",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --env-file=.env --import tsx --watch src/main.ts",
+    "start": "node --import tsx src/main.ts",
+    "typecheck": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@flowcraft/db": "workspace:*",
+    "@hocuspocus/server": "4.7.1",
+    "jose": "6.2.12",
+    "nanoid": "6.0.2",
+    "tsx": "4.23.15",
+    "yjs": "13.6.33"
+  },
+  "devDependencies": {
+    "@hocuspocus/provider": "4.7.1",
+    "@types/node": "24.19.2",
+    "typescript": "5.9.3",
+    "vitest": "5.0.5"
+  },
+  "exports": {
+    ".": "./src/server.ts",
+    "./token": "./src/token.ts"
+  }
+}
