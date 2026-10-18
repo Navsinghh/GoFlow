@@ -180,6 +180,12 @@ describe("activity", () => {
     await eventually(async () => expect((await events()).map((e) => e.data)).toEqual([{ text: "real" }]));
   });
 
+  it("answers health checks", async () => {
+    const response = await fetch(`${server.httpURL}/health`);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ok: true });
+  });
+
   it("relays events from the web app only with the shared secret", async () => {
     const ada = await connect();
     const event = { id: "e1", flowId: FLOW, kind: "flow.renamed", data: { from: "A", to: "B" } };

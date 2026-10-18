@@ -120,7 +120,7 @@ Whenever the flow contains workflow nodes, it's checked continuously. If anythin
 | Node can't connect to itself | A self-loop |
 
 ### Execution
-Running workflows isn't built yet; it's Phase 5 of the [roadmap](../README.md#roadmap). The groundwork is in place: the run check already computes the **execution order** (a topological sort), and `interpolate()` already fills `{{variables}}` with values. A run will walk the nodes in that order, pass each output along its connections, and call Claude for LLM nodes.
+Running workflows isn't built yet; it's the headline of **v2** (see the [roadmap](../README.md#roadmap)). The groundwork is in place: the run check already computes the **execution order** (a topological sort), and `interpolate()` already fills `{{variables}}` with values. A run will walk the nodes in that order, pass each output along its connections, and call the chosen AI model (free built-in AI or your own key) for LLM nodes.
 
 ---
 

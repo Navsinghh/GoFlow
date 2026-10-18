@@ -77,6 +77,12 @@ Also worth a look, in one function: the `remove` mutation in `apps/web/app/(app)
 - **Monorepo boundaries.** Pure packages (`flow-engine`, `node-registry`) have no React and no database, so they're trivially testable.
 - **Integration tests over mocks** where the risk is in the integration (SQL, WebSockets).
 - **CI with a real Postgres service container.**
+- **Production hardening** (the v1 release):
+  - env validation that refuses localhost defaults in production (`apps/web/lib/env.ts`)
+  - a health endpoint plus a wake-up ping for sleeping free hosts (`WakeCollab.tsx`)
+  - transaction-pooler detection (`packages/db/src/connect.ts`)
+  - security headers (`next.config.ts`)
+  - loading Yjs once on the server (`serverExternalPackages`), because two copies break its constructor checks
 
 ---
 

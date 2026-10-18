@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Brand } from "@/components/Brand";
 import { getSession } from "@/lib/auth";
-import { oauthProviders } from "@/lib/env";
+import { emailSignIn, oauthProviders } from "@/lib/env";
 import { SignInForm } from "./SignInForm";
 
 export const metadata: Metadata = { title: "Sign in · Flowcraft" };
@@ -25,9 +26,7 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
   return (
     <main className="grid min-h-dvh place-items-center px-4">
       <div className="w-full max-w-sm">
-        <Link href="/" className="font-mono text-sm text-accent">
-          flowcraft
-        </Link>
+        <Brand href="/" />
         <h1 className="mt-6 text-2xl font-semibold tracking-tight">Sign in or create an account</h1>
         <p className="mt-2 text-sm text-muted">Your flows are saved to your account, and there's no limit on how many.</p>
         {typeof error === "string" && (
@@ -35,7 +34,17 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
             {errors[error] ?? "Something went wrong signing you in. Please try again."}
           </p>
         )}
-        <SignInForm callbackURL={callbackURL} providers={oauthProviders} />
+        {emailSignIn || oauthProviders.github || oauthProviders.google ? (
+          <SignInForm callbackURL={callbackURL} providers={oauthProviders} emailEnabled={emailSignIn} />
+        ) : (
+          <p className="mt-8 rounded-lg border border-line bg-panel p-4 text-sm text-muted">
+            Sign-in isn't set up on this server yet. In the meantime you can{" "}
+            <Link href="/playground" className="text-accent hover:underline">
+              try Flowcraft without an account
+            </Link>
+            .
+          </p>
+        )}
       </div>
     </main>
   );

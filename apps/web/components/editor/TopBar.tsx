@@ -1,11 +1,11 @@
 "use client";
 
 import { useRef } from "react";
-import Link from "next/link";
 import { CircleHelp, Download, Eye, Redo2, Undo2, Upload } from "lucide-react";
 import type { FlowGraph } from "@flowcraft/flow-engine";
 import { readGraph, replaceGraph } from "@/lib/flow-doc";
 import { useFlowState } from "@/lib/flow-context";
+import { Brand } from "@/components/Brand";
 
 function isGraph(value: unknown): value is FlowGraph {
   const v = value as FlowGraph;
@@ -49,9 +49,7 @@ export function TopBar({ title, fileName, homeHref, actions, onShowTour }: TopBa
 
   return (
     <header className="flex h-12 shrink-0 items-center gap-3 border-b border-line bg-panel px-3">
-      <Link href={homeHref} className="font-mono text-sm text-accent">
-        flowcraft
-      </Link>
+      <Brand href={homeHref} />
       <span className="text-line">/</span>
       {title}
       <div className="ml-auto flex items-center gap-1">

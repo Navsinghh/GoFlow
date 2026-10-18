@@ -10,7 +10,10 @@ import type { AppRouter } from "@/server/trpc/router";
 import { useTRPC } from "@/lib/trpc/client";
 import { cn } from "@/lib/cn";
 import { UserMenu } from "@/components/UserMenu";
+import { Brand } from "@/components/Brand";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { V2Banner } from "@/components/V2Banner";
+import { WakeCollab } from "@/components/WakeCollab";
 import { FlowCard } from "./FlowCard";
 
 export type FlowSummary = inferRouterOutputs<AppRouter>["flow"]["list"][number];
@@ -92,9 +95,10 @@ export function Dashboard({ initialFlows, user }: { initialFlows: FlowSummary[];
 
   return (
     <div data-page-scroll className="min-h-dvh">
+      <WakeCollab />
       <header className="border-b border-line bg-panel">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4 sm:px-6">
-          <span className="font-mono text-sm text-accent">flowcraft</span>
+          <Brand href="/" />
           <div className="ml-auto">
             <UserMenu {...user} />
           </div>
@@ -102,6 +106,9 @@ export function Dashboard({ initialFlows, user }: { initialFlows: FlowSummary[];
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+        <div className="mb-8">
+          <V2Banner />
+        </div>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Your flows</h1>

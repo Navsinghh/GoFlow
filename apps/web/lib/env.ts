@@ -2,6 +2,7 @@ import "server-only";
 import { z } from "zod";
 
 const optional = z.string().min(1).optional();
+const isProduction = process.env.NODE_ENV === "production";
 
 const schema = z.object({
   DATABASE_URL: z.string().min(1),
@@ -9,8 +10,13 @@ const schema = z.object({
   BETTER_AUTH_URL: z.url().default("http://localhost:3000"),
   /** Shared with apps/collab to sign real-time session tokens. */
   COLLAB_SECRET: z.string().min(32, "Generate one with: openssl rand -base64 32"),
-  /** Server-to-server address of apps/collab (not exposed to browsers). */
-  COLLAB_INTERNAL_URL: z.url().default("http://localhost:1234"),
+  /**
+   * Server-to-server address of apps/collab (not exposed to browsers). Required
+   * in production, so a deploy can't silently point at localhost.
+   */
+  COLLAB_INTERNAL_URL: isProduction ? z.url() : z.url().default("http://localhost:1234"),
+  /** Browser-facing WebSocket address of apps/collab (wss:// in production). */
+  NEXT_PUBLIC_COLLAB_URL: isProduction ? z.url() : z.url().default("ws://localhost:1234"),
   RESEND_API_KEY: optional,
   EMAIL_FROM: z.string().default("Flowcraft <onboarding@resend.dev>"),
   GOOGLE_CLIENT_ID: optional,
@@ -20,6 +26,12 @@ const schema = z.object({
 });
 
 export const env = schema.parse(process.env);
+
+/**
+ * Email sign-in links need a real email service in production; without one the
+ * link would only reach the server log and the visitor would wait forever.
+ */
+export const emailSignIn = !isProduction || Boolean(env.RESEND_API_KEY);
 
 /** OAuth providers that have credentials configured. */
 export const oauthProviders = {

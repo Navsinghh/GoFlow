@@ -39,3 +39,6 @@ jobs:
           DATABASE_URL: ${{ env.TEST_DATABASE_URL }}
           BETTER_AUTH_SECRET: ci-only-secret-that-is-at-least-32-characters
           COLLAB_SECRET: ci-only-collab-secret-at-least-32-characters
+          # Production builds require explicit collab URLs (no localhost defaults).
+          NEXT_PUBLIC_COLLAB_URL: wss://collab.example.com
+          COLLAB_INTERNAL_URL: https://collab.example.com

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useReactFlow } from "@xyflow/react";
-import { Search, Shapes, Workflow } from "lucide-react";
+import { Search, Shapes, Sparkles, Workflow } from "lucide-react";
 import { definitionsFor, getDefinition, type NodeDefinition, type NodeMode } from "@flowcraft/node-registry";
 import { useFlowActions } from "@/lib/flow-context";
 import { nodeIcon } from "@/lib/icons";
@@ -81,6 +81,15 @@ export function Palette({ initialMode }: { initialMode: NodeMode }) {
         />
       </label>
       <div className="flex-1 space-y-4 overflow-y-auto p-2 pt-4">
+        {mode === "workflow" && (
+          <p className="flex gap-2 rounded-lg border border-accent/30 bg-accent/10 px-2.5 py-2 text-xs leading-relaxed text-muted">
+            <Sparkles className="mt-px size-3.5 shrink-0 text-accent" />
+            <span>
+              <span className="font-medium text-fg">Running workflows arrives in v2.</span> Design yours now and they'll
+              be ready to run.
+            </span>
+          </p>
+        )}
         {groupByCategory(visible).map(([category, items]) => (
           <section key={category}>
             <h3 className="px-1 pb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted">{category}</h3>

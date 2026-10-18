@@ -90,6 +90,13 @@ export function createCollabServer({ db, secret, port = 1234, autoVersionEveryMs
      * pushes an event it recorded (rename, share, …) to everyone in the room.
      */
     async onRequest({ request, response }) {
+      // Health check for hosting platforms and the web app's wake-up ping.
+      if (request.method === "GET" && request.url === "/health") {
+        response
+          .writeHead(200, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" })
+          .end(JSON.stringify({ ok: true }));
+        throw null;
+      }
       if (request.method !== "POST" || request.url !== "/events") return;
       if (request.headers.authorization !== `Bearer ${secret}`) {
         response.writeHead(401).end();

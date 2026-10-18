@@ -9,7 +9,7 @@ import { schema } from "@flowcraft/db";
 import { ensurePersonalWorkspace } from "@/server/workspaces";
 import { db } from "./db";
 import { sendMagicLinkEmail } from "./email";
-import { env } from "./env";
+import { emailSignIn, env } from "./env";
 
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
@@ -32,7 +32,7 @@ export const auth = betterAuth({
     },
   },
   plugins: [
-    magicLink({ sendMagicLink: ({ email, url }) => sendMagicLinkEmail(email, url) }),
+    ...(emailSignIn ? [magicLink({ sendMagicLink: ({ email, url }) => sendMagicLinkEmail(email, url) })] : []),
     // Must be last: lets server actions set auth cookies.
     nextCookies(),
   ],
