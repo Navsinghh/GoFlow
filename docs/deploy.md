@@ -171,4 +171,5 @@ The sign-in page shows a button for each provider that has both values set.
 | Vercel build fails installing packages | Add `ENABLE_EXPERIMENTAL_COREPACK=1` |
 | `pnpm db:migrate:neon` says "DATABASE_URL is not set" | The repository root has no `.env.local` yet: run `neon env pull` |
 | Build fails with "COLLAB_INTERNAL_URL" or "NEXT_PUBLIC_COLLAB_URL" required | Production builds require both; set them in Vercel |
+| Build says a variable is missing even though it's set in Vercel | Turborepo only passes variables listed in `turbo.json`; add new ones there (`env` if they change the build output, otherwise `passThroughEnv`) |
 | Chat or activity doesn't update live for web-side actions (renames, shares) | `COLLAB_INTERNAL_URL` is wrong or blocked |
