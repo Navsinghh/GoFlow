@@ -82,6 +82,7 @@ Also worth a look, in one function: the `remove` mutation in `apps/web/app/(app)
   - a health endpoint plus a wake-up ping for sleeping free hosts (`WakeCollab.tsx`)
   - a pooled database connection for the website and a direct one for migrations and the collab server, with idle connections closed before Vercel suspends a function (`packages/db/src/connect.ts`, `apps/web/lib/db.ts`)
   - security headers (`next.config.ts`)
+  - pausing the live connection for background or idle tabs (`apps/web/lib/away.ts`), because hosts like Cloud Run bill while any WebSocket is open
   - environment variables declared in `turbo.json`: Turborepo hides undeclared ones from tasks, so CI and Vercel builds only see what's listed there
   - loading Yjs once on the server (`serverExternalPackages`), because two copies break its constructor checks
 

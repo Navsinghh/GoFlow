@@ -12,5 +12,6 @@ RUN pnpm install --frozen-lockfile --filter "@flowcraft/collab..."
 ENV NODE_ENV=production
 WORKDIR /app/apps/collab
 EXPOSE 1234
-# Platforms usually inject PORT; DATABASE_URL and COLLAB_SECRET must be set.
+# Platforms usually inject PORT. Set DATABASE_URL_UNPOOLED (the direct database URL;
+# DATABASE_URL also works) and COLLAB_SECRET.
 CMD ["node", "--import", "tsx", "src/main.ts"]

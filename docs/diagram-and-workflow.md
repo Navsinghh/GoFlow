@@ -138,6 +138,7 @@ Running workflows isn't built yet; it's the headline of **v2** (see the [roadmap
 |---|---|
 | **Autosave** | Edits apply locally at once, go to the server in 300 ms batches, and are written to the database 2 s after the last edit (at least every 10 s while someone keeps editing). The top bar shows **Saved**, and only says **Saving…** if a save is slow. |
 | **Live editing** | Everyone in a flow sees each other's edits, cursors (with names) and selections (a coloured outline on the node) in real time. |
+| **Away** | After 5 minutes in a background tab, or 30 minutes without touching the page, the editor leaves the live session and the top bar shows **Paused while you're away**. It rejoins the moment you're back, and no edits are lost. |
 | **Roles** | **Owner** (everything, including sharing and deleting), **Editor** (edit), **Viewer** (look and chat; the canvas is read-only). |
 | **Chat** | Messages, plus a line for each change, e.g. *Ada deleted “input” (Input)*. Long runs of changes collapse to "+N more". |
 | **Version history** | Save named versions, and automatic snapshots are taken every 10 minutes while people edit. **Restore** is an ordinary edit, so Ctrl+Z undoes it and everyone sees it. |

@@ -100,6 +100,27 @@ The app talks to Postgres through node-postgres (`pg`). It works through Neon's 
   - Build command: `corepack enable && pnpm install --frozen-lockfile --filter "@flowcraft/collab..."`
   - Start command: `cd apps/collab && NODE_ENV=production node --import tsx src/main.ts`
 
+#### Google Cloud Run, step by step
+Google builds the container from GitHub and redeploys it on every push to `main`.
+1. **Cloud Run → Deploy container → Continuously deploy from a repository → Set up with Cloud Build.**
+   - Connect GitHub and install the Google Cloud Build app for this repository only.
+   - Branch `^main$`, build type **Dockerfile**, source location `/apps/collab/Dockerfile`.
+2. **Service name** `flowcraft-collab`. **Region:** the one closest to your Neon database (e.g. `asia-southeast1` for Neon's Singapore region).
+3. **Authentication:** allow public access. Browsers connect directly, and the server checks Flowcraft's own tokens.
+4. **Billing:** request-based. **Scaling:** minimum 0, maximum **1** instance.
+5. **Container settings:** port 8080, 512 MiB memory, 1 CPU, request timeout **3600** seconds, maximum concurrent requests **1000**.
+6. **Variables:** `DATABASE_URL_UNPOOLED` (the Neon direct string) and `COLLAB_SECRET`.
+7. **Networking:** session affinity on, HTTP/2 end-to-end off.
+
+| Setting | Why |
+|---|---|
+| Maximum 1 instance | Each instance holds its own live copy of a flow; two instances would split the people editing it |
+| Timeout 3600 s | WebSocket connections count as requests. The default 5 minutes would cut every connection; 60 minutes is the maximum, and the editor reconnects by itself |
+| 1000 concurrent requests | Every open connection takes one slot (the default is 80) |
+| Minimum 0 instances | Nothing to pay while nobody is connected; it starts in a few seconds, and the wake-up ping hides most of that |
+
+Cloud Run bills while any WebSocket is open. That's why the editor pauses its connection when a tab sits in the background for 5 minutes or goes 30 minutes without input, and rejoins as soon as the person is back. Set a budget alert under **Billing → Budgets & alerts** anyway.
+
 After it's live, open `https://<your-collab-host>/health` and confirm you see `{"ok":true}`. Note the address. You'll use it twice:
 - `wss://<your-collab-host>` for browsers
 - `https://<your-collab-host>` for the website's server
@@ -110,6 +131,7 @@ After it's live, open `https://<your-collab-host>/health` and confirm you see `{
    - **Root Directory:** `apps/web`
    - **Framework preset:** Next.js
    - **Node.js version** (Project Settings → General): 24.x
+   - **Function region** (Project Settings → Functions): the one closest to your Neon database, e.g. **Singapore (sin1)** for Neon's Singapore region. Most pages query the database, so a region on another continent makes every page noticeably slower.
 3. Environment variables (Project Settings → Environment Variables):
 
 | Name | Value |

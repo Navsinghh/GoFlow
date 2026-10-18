@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, CloudOff, Loader2, Lock } from "lucide-react";
+import { Check, CloudOff, Loader2, Lock, Pause } from "lucide-react";
 import * as Y from "yjs";
 import { decodeBase64 } from "@/lib/base64";
 import { createFlowDoc, REMOTE_ORIGIN, type FlowDoc } from "@/lib/flow-doc";
@@ -25,6 +25,7 @@ const display: Record<CollabStatus, { label: string; icon: React.ReactNode }> = 
   live: { label: "Saved", icon: <Check className="size-3.5" /> },
   saving: { label: "Saving…", icon: <Loader2 className="size-3.5 animate-spin" /> },
   offline: { label: "Offline, changes kept", icon: <CloudOff className="size-3.5 text-warn" /> },
+  paused: { label: "Paused while you're away", icon: <Pause className="size-3.5" /> },
   denied: { label: "No access", icon: <Lock className="size-3.5 text-danger" /> },
 };
 
