@@ -1,5 +1,6 @@
-# Collaboration server (Hocuspocus). Build from the repository root:
-#   docker build -f apps/collab/Dockerfile -t flowcraft-collab .
+# Collaboration server (apps/collab, Hocuspocus). It lives at the repository root
+# because hosts build from the Dockerfile's folder and the server needs the workspace:
+#   docker build -t flowcraft-collab .
 # Works on any container host: Render, Northflank, Cloud Run, Koyeb, Railway, a VPS.
 FROM node:24-slim
 RUN corepack enable

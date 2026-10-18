@@ -56,7 +56,7 @@ The app talks to Postgres through node-postgres (`pg`). It works through Neon's 
 
 ## 2. Collaboration server: choose a host
 ### What it needs
-- Node.js 24 **or** Docker. A Dockerfile is included: `apps/collab/Dockerfile`, built from the repository root.
+- Node.js 24 **or** Docker. The `Dockerfile` at the repository root builds the collaboration server.
 - **WebSocket support** (`wss://`).
 - About 256–512 MB of RAM; very little CPU.
 - Environment variables:
@@ -94,7 +94,7 @@ The app talks to Postgres through node-postgres (`pg`). It works through Neon's 
 
 ### Deploying it
 - **Docker-based hosts** (Render, Northflank, Cloud Run, Koyeb, a VPS):
-  - Dockerfile: `apps/collab/Dockerfile`
+  - Dockerfile: `Dockerfile` (repository root)
   - Build context: the **repository root**
 - **Native Node hosts** (e.g. Render "Node" runtime):
   - Build command: `corepack enable && pnpm install --frozen-lockfile --filter "@flowcraft/collab..."`
@@ -104,7 +104,7 @@ The app talks to Postgres through node-postgres (`pg`). It works through Neon's 
 Google builds the container from GitHub and redeploys it on every push to `main`.
 1. **Cloud Run → Deploy container → Continuously deploy from a repository → Set up with Cloud Build.**
    - Connect GitHub and install the Google Cloud Build app for this repository only.
-   - Branch `^main$`, build type **Dockerfile**, source location `/apps/collab/Dockerfile`.
+   - Branch `^main$`, build type **Dockerfile**, source location `/Dockerfile`. (Cloud Run builds from the Dockerfile's folder, which must be the repository root.)
 2. **Service name** `flowcraft-collab`. **Region:** the one closest to your Neon database (e.g. `asia-southeast1` for Neon's Singapore region).
 3. **Authentication:** allow public access. Browsers connect directly, and the server checks Flowcraft's own tokens.
 4. **Billing:** request-based. **Scaling:** minimum 0, maximum **1** instance.
@@ -162,12 +162,11 @@ Email sign-in links are hidden in production unless an email service with your o
 4. In Vercel, add `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`, then redeploy.
 
 ### Google (about 10 minutes)
-1. In [Google Cloud Console](https://console.cloud.google.com), create a project. Then go to **APIs & Services → OAuth consent screen**.
-   - Choose **External**.
-   - Fill in the app name and your email.
-   - Use the basic scopes (email, profile, openid). These don't need Google's review.
-   - **Publish** the app, so anyone (not just test users) can sign in.
-2. Go to **Credentials → Create credentials → OAuth client ID → Web application**.
+1. In [Google Cloud Console](https://console.cloud.google.com), open **Google Auth Platform** (older screens: **APIs & Services → OAuth consent screen**). Any project works, including the one hosting the collaboration server.
+   - **Get started:** fill in the app name and your email, and choose **External**.
+   - Keep the basic scopes (email, profile, openid). These don't need Google's review.
+   - Under **Audience**, click **Publish app**, so anyone (not just test users) can sign in.
+2. Under **Clients**, click **Create client** and choose **Web application** (older screens: **Credentials → Create credentials → OAuth client ID**).
    - **Authorized JavaScript origin:** `https://<your-site>`
    - **Authorized redirect URI:** `https://<your-site>/api/auth/callback/google`
 3. In Vercel, add `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, then redeploy.
