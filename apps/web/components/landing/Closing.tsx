@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { Play } from "lucide-react";
 import { Brand } from "@/components/Brand";
-import { GitHubMark } from "@/components/BrandMarks";
-import { REPO_URL } from "@/lib/site";
 import { StartLink, secondaryButton } from "./shared";
 
 export function FinalCta({ signedIn }: { signedIn: boolean }) {
@@ -46,9 +44,6 @@ export function Footer() {
           </Link>
           <a href="#roadmap" className="transition hover:text-fg">
             Roadmap
-          </a>
-          <a href={REPO_URL} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 transition hover:text-fg">
-            <GitHubMark className="size-3.5" /> Source code
           </a>
         </nav>
       </div>

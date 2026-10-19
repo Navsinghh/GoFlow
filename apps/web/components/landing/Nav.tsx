@@ -1,7 +1,5 @@
 import Link from "next/link";
 import { Brand } from "@/components/Brand";
-import { GitHubMark } from "@/components/BrandMarks";
-import { REPO_URL } from "@/lib/site";
 
 const sections = [
   { href: "#features", label: "Features" },
@@ -25,16 +23,6 @@ export function Nav({ signedIn }: { signedIn: boolean }) {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-2">
-          <a
-            href={REPO_URL}
-            target="_blank"
-            rel="noreferrer"
-            title="Source code on GitHub"
-            aria-label="Source code on GitHub"
-            className="grid size-9 place-items-center rounded-lg text-muted transition hover:bg-raised hover:text-fg"
-          >
-            <GitHubMark className="size-[18px]" />
-          </a>
           {signedIn ? (
             <Link href="/dashboard" className={primary}>
               Your flows

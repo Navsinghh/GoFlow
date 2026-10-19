@@ -1,4 +1,4 @@
-/** GitHub's and Google's logos, for sign-in buttons and links. */
+/** GitHub's and Google's logos for the sign-in buttons. */
 
 export function GitHubMark({ className = "size-4" }: { className?: string }) {
   return (
