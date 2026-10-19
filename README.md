@@ -2,7 +2,7 @@
 
 **Map it out. Then make it run.** Diagrams and AI workflows on one live, collaborative canvas. Sketch a process, design the AI pipeline next to it, and work on it together in real time.
 
-**Live demo:** _add your URL here after deploying_ · No account needed: open **Try it without signing up** on the landing page.
+**Live demo:** [flowcraftapp.vercel.app](https://flowcraftapp.vercel.app) · No account needed: open **Try it without signing up** on the landing page.
 
 ![The Flowcraft canvas: an AI workflow and a flowchart side by side](docs/images/playground.jpg)
 

@@ -105,7 +105,7 @@ Google builds the container from GitHub and redeploys it on every push to `main`
 1. **Cloud Run → Deploy container → Continuously deploy from a repository → Set up with Cloud Build.**
    - Connect GitHub and install the Google Cloud Build app for this repository only.
    - Branch `^main$`, build type **Dockerfile**, source location `/Dockerfile`. (Cloud Run builds from the Dockerfile's folder, which must be the repository root.)
-2. **Service name** `flowcraft-collab`. **Region:** the one closest to your Neon database (e.g. `asia-southeast1` for Neon's Singapore region).
+2. **Service name** `flowcraft-collab`. **Region:** near your users, preferably a **Tier 1** (cheaper) region, e.g. `asia-south1` (Mumbai) for visitors in India. Saves happen in the background, so a database one country away (Neon in Singapore) adds no visible delay.
 3. **Authentication:** allow public access. Browsers connect directly, and the server checks Flowcraft's own tokens.
 4. **Billing:** request-based. **Scaling:** minimum 0, maximum **1** instance.
 5. **Container settings:** port 8080, 512 MiB memory, 1 CPU, request timeout **3600** seconds, maximum concurrent requests **1000**.
@@ -131,7 +131,7 @@ After it's live, open `https://<your-collab-host>/health` and confirm you see `{
    - **Root Directory:** `apps/web`
    - **Framework preset:** Next.js
    - **Node.js version** (Project Settings → General): 24.x
-   - **Function region** (Project Settings → Functions): the one closest to your Neon database, e.g. **Singapore (sin1)** for Neon's Singapore region. Most pages query the database, so a region on another continent makes every page noticeably slower.
+   - **Function region:** `apps/web/vercel.json` pins it to **Singapore (`sin1`)**, next to the Neon database. Most pages query the database, so a region on another continent makes every page noticeably slower; change it there if your database is elsewhere.
 3. Environment variables (Project Settings → Environment Variables):
 
 | Name | Value |
@@ -189,6 +189,7 @@ The sign-in page shows a button for each provider that has both values set.
 | "No access" in the editor | `COLLAB_SECRET` mismatch |
 | GitHub/Google error "redirect_uri mismatch" | The callback URL doesn't exactly match `https://<your-site>/api/auth/callback/<provider>` |
 | Sign-in page says it isn't set up | No OAuth variables set (or no redeploy after adding them) |
+| Build fails with `TypeError: Invalid URL` in `app/layout.tsx` | `BETTER_AUTH_URL` must be a full address including `https://`, e.g. `https://flowcraftapp.vercel.app` |
 | Vercel build fails installing packages | Add `ENABLE_EXPERIMENTAL_COREPACK=1` |
 | `pnpm db:migrate:neon` says "DATABASE_URL is not set" | The repository root has no `.env.local` yet: run `neon env pull` |
 | Build fails with "COLLAB_INTERNAL_URL" or "NEXT_PUBLIC_COLLAB_URL" required | Production builds require both; set them in Vercel |

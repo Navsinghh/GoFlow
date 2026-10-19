@@ -30,6 +30,100 @@
       transform: translateY(-4px);
     }
   }
+
+  /* Landing page. Every use is behind motion-safe:, so reduced motion shows the still picture. */
+  --animate-edge-flow: edge-flow 1s linear infinite;
+  @keyframes edge-flow {
+    to {
+      stroke-dashoffset: -16;
+    }
+  }
+  --animate-float: float 6s ease-in-out infinite;
+  @keyframes float {
+    50% {
+      transform: translateY(-6px);
+    }
+  }
+  --animate-chat-in: chat-in 12s ease-out infinite both;
+  @keyframes chat-in {
+    0% {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    6%,
+    88% {
+      opacity: 1;
+      transform: none;
+    }
+    96%,
+    100% {
+      opacity: 0;
+    }
+  }
+  --animate-port-pop: port-pop 5s ease-in-out infinite both;
+  @keyframes port-pop {
+    0%,
+    20% {
+      opacity: 0;
+      transform: scale(0.92);
+    }
+    30%,
+    85% {
+      opacity: 1;
+      transform: none;
+    }
+    95%,
+    100% {
+      opacity: 0;
+    }
+  }
+  /* Collaborator cursors in the hero picture; positions are in its container's width units. */
+  --animate-cursor-ada: cursor-ada 11s ease-in-out infinite;
+  @keyframes cursor-ada {
+    0%,
+    100% {
+      left: 44cqw;
+      top: 15cqw;
+    }
+    25% {
+      left: 52.5cqw;
+      top: 12.8cqw;
+    }
+    50% {
+      left: 47cqw;
+      top: 17.8cqw;
+    }
+    75% {
+      left: 65cqw;
+      top: 15.2cqw;
+    }
+  }
+  --animate-cursor-lin: cursor-lin 13s ease-in-out infinite;
+  @keyframes cursor-lin {
+    0%,
+    100% {
+      left: 33cqw;
+      top: 42.5cqw;
+    }
+    30% {
+      left: 45.5cqw;
+      top: 40cqw;
+    }
+    60% {
+      left: 58.5cqw;
+      top: 43.2cqw;
+    }
+    80% {
+      left: 40.5cqw;
+      top: 45.8cqw;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 html,
